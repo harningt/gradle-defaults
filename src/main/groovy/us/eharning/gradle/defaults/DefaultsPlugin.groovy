@@ -38,6 +38,7 @@ class DefaultsPlugin implements Plugin<Project> {
         project.allprojects { prj ->
             addCheckstyle(prj)
             addFindbugs(prj)
+            addLicense(prj)
             addSpotless(prj)
             addJavaConfig(prj)
             addGroovyConfig(prj, extension)
