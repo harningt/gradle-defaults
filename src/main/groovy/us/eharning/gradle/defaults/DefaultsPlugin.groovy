@@ -16,6 +16,7 @@
  */
 package us.eharning.gradle.defaults
 
+import nl.javadude.gradle.plugins.license.License
 import org.gradle.api.Plugin
 import org.gradle.api.GradleException
 import org.gradle.api.Project
