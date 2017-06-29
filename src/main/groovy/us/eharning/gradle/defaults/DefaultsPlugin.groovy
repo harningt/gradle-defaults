@@ -103,10 +103,12 @@ class DefaultsPlugin implements Plugin<Project> {
     private void addVersioneye(Project project) {
         project.plugins.apply('org.standardout.versioneye')
 
-        project.versioneye {
-            includePlugins = false
-            /* Workaround for Gradle 4 issue */
-            exclude project.configurations.findAll { !it.canBeResolved }*.name as String[]
+        project.afterEvaluate {
+            project.versioneye {
+                includePlugins = false
+                /* Workaround for Gradle 4 issue */
+                exclude project.configurations.findAll { !it.canBeResolved }*.name as String[]
+            }
         }
     }
 
