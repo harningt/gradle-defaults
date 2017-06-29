@@ -43,6 +43,10 @@ dependencies {
     compile "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0"
 }
 
+checkstyle {
+    toolVersion = "7.8.2"
+}
+
 pluginBundle {
     website = 'https://github.com/harningt/gradle-defaults'
     vcsUrl = 'https://github.com/harningt/gradle-defaults'

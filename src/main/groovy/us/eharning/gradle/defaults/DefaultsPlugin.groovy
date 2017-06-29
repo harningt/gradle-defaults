@@ -115,7 +115,7 @@ class DefaultsPlugin implements Plugin<Project> {
             project.plugins.apply('checkstyle')
             project.checkstyle {
                 /* Using checkstyle 6.19 as that is the last version of Checkstyle to support JDK7 */
-                toolVersion = '7.8.1'
+                toolVersion = '7.8.2'
                 config = project.resources.text.fromFile(new File(project.rootDir, '/gradle/checkstyle/checkstyle.xml'))
             }
         }
