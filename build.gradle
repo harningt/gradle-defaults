@@ -25,7 +25,6 @@ repositories {
 }
 
 group = 'us.eharning.gradle'
-version = '0.1.2'
 
 dependencies {
     compile gradleApi()
