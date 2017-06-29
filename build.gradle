@@ -44,6 +44,11 @@ dependencies {
     compile "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0"
 }
 
+versioneye {
+    /* Workaround for Gradle 4 issue */
+    exclude project.configurations.findAll { !it.canBeResolved }*.name as String[]
+}
+
 checkstyle {
     toolVersion = "7.8.2"
 }
