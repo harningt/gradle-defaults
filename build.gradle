@@ -12,6 +12,7 @@ buildscript {
 plugins {
   id 'groovy'
   id 'java-gradle-plugin'
+  id 'us.eharning.gradle.defaults' version '0.1.2'
 }
 
 apply plugin: "com.gradle.plugin-publish"
@@ -41,6 +42,15 @@ dependencies {
     compile "com.diffplug.spotless:spotless-plugin-gradle:3.4.0"
     compile "org.standardout:gradle-versioneye-plugin:1.4.0"
     compile "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0"
+}
+
+versioneye {
+    /* Workaround for Gradle 4 issue */
+    exclude project.configurations.findAll { !it.canBeResolved }*.name as String[]
+}
+
+checkstyle {
+    toolVersion = "7.8.2"
 }
 
 pluginBundle {
