@@ -17,8 +17,8 @@
 package us.eharning.gradle.defaults
 
 import nl.javadude.gradle.plugins.license.License
-import org.gradle.api.Plugin
 import org.gradle.api.GradleException
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.publish.maven.MavenPublication
@@ -28,217 +28,237 @@ class DefaultsPlugin implements Plugin<Project> {
 
     void apply(Project project) {
         if (project.rootProject != project) {
-            throw new GradleException('org.ajoberstar.defaults must only be applied to the root project')
+            throw new GradleException('us.eharning.gradle.defaults must only be applied to the root project')
         }
 
         DefaultsExtension extension = project.extensions.create('defaults', DefaultsExtension, project)
-        addGit(project)
-        addReleaseConfig(project)
-        addVersioneye(project)
+        def globalOps = new GlobalOperations(plugin)
+        globalOps.addGit()
+        globalOps.addReleaseConfig()
+        globalOps.addVersioneye()
 
         project.allprojects { prj ->
-            addCheckstyle(prj)
-            addFindbugs(prj)
-            addLicense(prj)
-            addSpotless(prj)
-            addJavaConfig(prj)
-            addGroovyConfig(prj, extension)
-            addPublishingConfig(prj, extension)
-            addPluginConfig(prj)
-            addOrderingRules(prj)
+            def localOps = new LocalOperations(prj, extension)
+            localOps.addCheckstyle()
+            localOps.addFindbugs()
+            localOps.addLicense()
+            localOps.addSpotless()
+            localOps.addJavaConfig()
+            localOps.addGroovyConfig()
+            localOps.addPublishingConfig()
+            localOps.addPluginConfig()
+            localOps.addOrderingRules()
         }
     }
 
+    private class GlobalOperations {
+        private final DefaultsExtension extension
+        private final Project project
 
-    private void addGit(Project project) {
-        project.plugins.apply('org.ajoberstar.grgit')
-        project.plugins.apply('org.ajoberstar.git-publish')
+        GlobalOperations(Project project, DefaultsExtension extension) {
+            this.project = project
+            this.extension = extension
+        }
 
-        def addOutput = { task ->
-            project.gitPublish.contents.from(task.outputs.files) {
-                into "docs${task.path}".replace(':', '/')
+        void addGit() {
+            project.plugins.apply('org.ajoberstar.grgit')
+            project.plugins.apply('org.ajoberstar.git-publish')
+
+            def addOutput = { task ->
+                project.gitPublish.contents.from(task.outputs.files) {
+                    into "docs${task.path}".replace(':', '/')
+                }
+            }
+
+            project.allprojects { prj ->
+                prj.plugins.withId('java') { addOutput(prj.javadoc) }
+                prj.plugins.withId('groovy') { addOutput(prj.groovydoc) }
+            }
+
+            project.gitPublish {
+                branch = 'gh-pages'
+                contents {
+                    from 'src/gh-pages'
+                }
             }
         }
 
-        project.allprojects { prj ->
-            prj.plugins.withId('java') { addOutput(prj.javadoc) }
-            prj.plugins.withId('groovy') { addOutput(prj.groovydoc) }
-        }
+        void addReleaseConfig() {
+            project.plugins.apply('org.ajoberstar.semver-vcs-grgit')
+            project.plugins.apply('org.ajoberstar.release-opinion')
 
-        project.gitPublish {
-            branch = 'gh-pages'
-            contents {
-                from 'src/gh-pages'
-            }
-        }
-    }
-
-    private void addReleaseConfig(Project project) {
-        project.plugins.apply('org.ajoberstar.semver-vcs-grgit')
-        project.plugins.apply('org.ajoberstar.release-opinion')
-
-        def tagTask = project.tasks.create('tagVersion') {
-            doLast {
-                def version = project.version.toString()
+            def tagTask = project.tasks.create('tagVersion') {
+                doLast {
+                    def version = project.version.toString()
                     project.grgit.tag.add(name: version, message: "v${version}")
+                }
+            }
+
+            def releaseTask = project.tasks.release
+            releaseTask.dependsOn tagTask
+            releaseTask.dependsOn 'gitPublishPush'
+            project.allprojects { prj ->
+                prj.plugins.withId('org.gradle.base') {
+                    releaseTask.dependsOn prj.clean, prj.build
+                }
+                prj.plugins.withId('maven-publish') {
+                    releaseTask.dependsOn prj.publish
+                }
+                prj.plugins.withId('com.gradle.plugin-publish') {
+                    releaseTask.dependsOn prj.publishPlugins
+                }
             }
         }
 
-        def releaseTask = project.tasks.release
-        releaseTask.dependsOn tagTask
-        releaseTask.dependsOn 'gitPublishPush'
-        project.allprojects { prj ->
-            prj.plugins.withId('org.gradle.base') {
-                releaseTask.dependsOn prj.clean, prj.build
-            }
-            prj.plugins.withId('maven-publish') {
-                releaseTask.dependsOn prj.publish
-            }
-            prj.plugins.withId('com.gradle.plugin-publish') {
-                releaseTask.dependsOn prj.publishPlugins
-            }
-        }
-    }
+        void addVersioneye() {
+            project.plugins.apply('org.standardout.versioneye')
 
-    private void addVersioneye(Project project) {
-        project.plugins.apply('org.standardout.versioneye')
-
-        project.afterEvaluate {
-            project.versioneye {
-                includePlugins = false
-                /* Workaround for Gradle 4 issue */
-                exclude project.configurations.findAll { !it.canBeResolved }*.name as String[]
-            }
-        }
-    }
-
-    private void addCheckstyle(Project project) {
-        project.plugins.withId('java') {
-            project.plugins.apply('checkstyle')
-            project.checkstyle {
-                toolVersion = '7.8.2'
-                config = project.resources.text.fromFile(new File(project.rootDir, '/gradle/checkstyle/checkstyle.xml'))
+            project.afterEvaluate {
+                project.versioneye {
+                    includePlugins = false
+                    /* Workaround for Gradle 4 issue */
+                    exclude project.configurations.findAll { !it.canBeResolved }*.name as String[]
+                }
             }
         }
     }
 
-    private void addFindbugs(Project project) {
-        project.plugins.withId('java') {
-            project.plugins.apply('findbugs')
-            project.findbugs {
-                sourceSets = [ sourceSets.main ]
-            }
+    private class LocalOperations {
+        private final Project project
+        private final DefaultsExtension extension
+
+        LocalOperations(Project project, DefaultsExtension extension) {
+            this.project = project
+            this.extension = extension
         }
 
-    }
-
-    private void addLicense(Project project) {
-        project.plugins.apply('com.github.hierynomus.license')
-        project.afterEvaluate {
-            project.license {
-                header = project.rootProject.file('gradle/HEADER')
-                strictCheck = true
-                /* So that year-check doesn't muck around */
-                skipExistingHeaders = true
-                useDefaultMappings = false
-                mapping 'groovy', 'SLASHSTAR_STYLE'
-                mapping 'java', 'SLASHSTAR_STYLE'
-                ext.year = Calendar.getInstance().get(Calendar.YEAR)
-            }
-            project.tasks.withType(License) {
-                exclude '**/*.properties'
-            }
-        }
-    }
-
-    private void addSpotless(Project project) {
-        project.plugins.apply('com.diffplug.gradle.spotless')
-        /* License management handled by a separate extension due to dates/etc */
-        project.spotless {
+        private void addCheckstyle() {
             project.plugins.withId('java') {
-                java {
+                project.plugins.apply('checkstyle')
+                project.checkstyle {
+                    toolVersion = '7.8.2'
+                    config = project.resources.text.fromFile(new File(project.rootDir, '/gradle/checkstyle/checkstyle.xml'))
+                }
+            }
+        }
+
+        private void addFindbugs() {
+            project.plugins.withId('java') {
+                project.plugins.apply('findbugs')
+                project.findbugs {
+                    sourceSets = [sourceSets.main]
+                }
+            }
+
+        }
+
+        private void addLicense() {
+            project.plugins.apply('com.github.hierynomus.license')
+            project.afterEvaluate {
+                project.license {
+                    header = project.rootProject.file('gradle/HEADER')
+                    strictCheck = true
+                    /* So that year-check doesn't muck around */
+                    skipExistingHeaders = true
+                    useDefaultMappings = false
+                    mapping 'groovy', 'SLASHSTAR_STYLE'
+                    mapping 'java', 'SLASHSTAR_STYLE'
+                    ext.year = Calendar.getInstance().get(Calendar.YEAR)
+                }
+                project.tasks.withType(License) {
+                    exclude '**/*.properties'
+                }
+            }
+        }
+
+        private void addSpotless() {
+            project.plugins.apply('com.diffplug.gradle.spotless')
+            /* License management handled by a separate extension due to dates/etc */
+            project.spotless {
+                project.plugins.withId('java') {
+                    java {
+                        trimTrailingWhitespace()
+                        indentWithSpaces(4)
+                        endWithNewline()
+                    }
+                }
+                project.plugins.withId('groovy') {
+                    format 'groovy', {
+                        target 'src/**/*.groovy'
+                        trimTrailingWhitespace()
+                        indentWithSpaces(4)
+                        endWithNewline()
+                    }
+                }
+                format 'gradle', {
+                    target '**/build.gradle'
                     trimTrailingWhitespace()
                     indentWithSpaces(4)
                     endWithNewline()
                 }
             }
+        }
+
+        private void addJavaConfig() {
+            project.plugins.withId('java') {
+                project.plugins.apply('jacoco')
+                project.jacoco {
+                    toolVersion = '0.7.9'
+                }
+                project.jacocoTestReport {
+                    reports {
+                        xml.enabled true
+                        html.destination new File(project.buildDir, "jacocoHtml")
+                    }
+                }
+
+
+                Task sourcesJar = project.tasks.create('sourcesJar', Jar)
+                sourcesJar.with {
+                    classifier = 'sources'
+                    from project.sourceSets.main.allSource
+                }
+
+                Task javadocJar = project.tasks.create('javadocJar', Jar)
+                javadocJar.with {
+                    classifier = 'javadoc'
+                    from project.tasks.javadoc.outputs.files
+                }
+            }
+        }
+
+        private void addGroovyConfig() {
             project.plugins.withId('groovy') {
-                format 'groovy', {
-                    target 'src/**/*.groovy'
-                    trimTrailingWhitespace()
-                    indentWithSpaces(4)
-                    endWithNewline()
-                }
-            }
-            format 'gradle', {
-                target '**/build.gradle'
-                trimTrailingWhitespace()
-                indentWithSpaces(4)
-                endWithNewline()
-            }
-        }
-    }
-
-    private void addJavaConfig(Project project) {
-        project.plugins.withId('java') {
-            project.plugins.apply('jacoco')
-            project.jacoco {
-                toolVersion = '0.7.9'
-            }
-            project.jacocoTestReport {
-                reports {
-                    xml.enabled true
-                    html.destination new File(project.buildDir, "jacocoHtml")
-                }
-            }
-
-
-            Task sourcesJar = project.tasks.create('sourcesJar', Jar)
-            sourcesJar.with {
-                classifier = 'sources'
-                from project.sourceSets.main.allSource
-            }
-
-            Task javadocJar = project.tasks.create('javadocJar', Jar)
-            javadocJar.with {
-                classifier = 'javadoc'
-                from project.tasks.javadoc.outputs.files
-            }
-        }
-    }
-
-    private void addGroovyConfig(Project project, DefaultsExtension extension) {
-        project.plugins.withId('groovy') {
-            project.afterEvaluate {
-                if (!extension.includeGroovy) {
-                    return;
-                }
-                Task groovydocJar = project.tasks.create('groovydocJar', Jar)
-                groovydocJar.with {
-                    classifier = 'groovydoc'
-                    from project.tasks.groovydoc.outputs.files
+                project.afterEvaluate {
+                    if (!extension.includeGroovy) {
+                        return;
+                    }
+                    Task groovydocJar = project.tasks.create('groovydocJar', Jar)
+                    groovydocJar.with {
+                        classifier = 'groovydoc'
+                        from project.tasks.groovydoc.outputs.files
+                    }
                 }
             }
         }
-    }
 
-    private void addPublishingConfig(Project project, DefaultsExtension extension) {
-        project.plugins.withId('java') {
-            project.plugins.apply('maven-publish')
-            //project.plugins.apply('org.ajoberstar.bintray')
+        private void addPublishingConfig() {
+            project.plugins.withId('java') {
+                project.plugins.apply('maven-publish')
 
-            project.afterEvaluate {
+                project.afterEvaluate {
 
-                project.publishing {
-                    publications {
-                        main(MavenPublication) {
-                            from project.components.java
-                            artifact project.sourcesJar
-                            artifact project.javadocJar
+                    project.publishing {
+                        publications {
+                            main(MavenPublication) {
+                                from project.components.java
+                                artifact project.sourcesJar
+                                artifact project.javadocJar
 
-                            if (extension.includeGroovy) {
-                                project.plugins.withId('groovy') {
-                                    artifact project.groovydocJar
+                                if (extension.includeGroovy) {
+                                    project.plugins.withId('groovy') {
+                                        artifact project.groovydocJar
+                                    }
                                 }
                             }
                         }
@@ -246,36 +266,36 @@ class DefaultsPlugin implements Plugin<Project> {
                 }
             }
         }
-    }
 
-    private void addPluginConfig(Project project) {
-        project.plugins.withId('java-gradle-plugin') {
-            project.plugins.apply('org.ajoberstar.stutter')
-            project.plugins.apply('com.gradle.plugin-publish')
+        private void addPluginConfig() {
+            project.plugins.withId('java-gradle-plugin') {
+                project.plugins.apply('org.ajoberstar.stutter')
+                project.plugins.apply('com.gradle.plugin-publish')
 
-            // remove duplicate publication
-            project.gradlePlugin.automatedPublishing = false
+                // remove duplicate publication
+                project.gradlePlugin.automatedPublishing = false
 
-            // avoid conflict with localGroovy()
-            project.configurations.all {
-                exclude group: 'org.codehaus.groovy'
-            }
-        }
-    }
-
-    private void addOrderingRules(Project project) {
-        project.plugins.withId('org.gradle.base') {
-            def clean = project.tasks['clean']
-            project.tasks.all { task ->
-                if (task != clean) {
-                    task.shouldRunAfter clean
+                // avoid conflict with localGroovy()
+                project.configurations.all {
+                    exclude group: 'org.codehaus.groovy'
                 }
             }
+        }
 
-            def build = project.tasks['build']
-            project.tasks.all { task ->
-                if (task.group == 'publishing') {
-                    task.shouldRunAfter build
+        private void addOrderingRules() {
+            project.plugins.withId('org.gradle.base') {
+                def clean = project.tasks['clean']
+                project.tasks.all { task ->
+                    if (task != clean) {
+                        task.shouldRunAfter clean
+                    }
+                }
+
+                def build = project.tasks['build']
+                project.tasks.all { task ->
+                    if (task.group == 'publishing') {
+                        task.shouldRunAfter build
+                    }
                 }
             }
         }
