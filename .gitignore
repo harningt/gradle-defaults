@@ -21,6 +21,8 @@ hs_err_pid*
 # IDE
 .idea
 *.iml
+*.ipr
+*.iws
 
 # Build output
 build
