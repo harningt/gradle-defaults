@@ -151,13 +151,6 @@ class DefaultsPlugin implements Plugin<Project> {
                     excludeFilter project.rootProject.file('gradle/findbugs-exclude.xml')
                 }
             }
-            project.plugins.withId('kotlin') {
-                project.plugins.apply('findbugs')
-                project.findbugs {
-                    sourceSets = [sourceSets.main]
-                    excludeFilter project.rootProject.file('gradle/findbugs-exclude.xml')
-                }
-            }
         }
 
         private void addLicense() {
