@@ -164,6 +164,7 @@ class DefaultsPlugin implements Plugin<Project> {
                     useDefaultMappings = false
                     mapping 'groovy', 'SLASHSTAR_STYLE'
                     mapping 'java', 'SLASHSTAR_STYLE'
+                    mapping 'kt', 'SLASHSTAR_STYLE'
                     ext.year = Calendar.getInstance().get(Calendar.YEAR)
                 }
                 project.tasks.withType(License) {
@@ -186,6 +187,14 @@ class DefaultsPlugin implements Plugin<Project> {
                 project.plugins.withId('groovy') {
                     format 'groovy', {
                         target 'src/**/*.groovy'
+                        trimTrailingWhitespace()
+                        indentWithSpaces(4)
+                        endWithNewline()
+                    }
+                }
+                project.plugins.withId('kotlin') {
+                    format 'kotlin', {
+                        target 'src/**/*.kt'
                         trimTrailingWhitespace()
                         indentWithSpaces(4)
                         endWithNewline()
