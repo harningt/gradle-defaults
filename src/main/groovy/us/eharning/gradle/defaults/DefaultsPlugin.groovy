@@ -234,7 +234,7 @@ class DefaultsPlugin implements Plugin<Project> {
             project.plugins.withId('groovy') {
                 project.afterEvaluate {
                     if (!extension.includeGroovy) {
-                        return;
+                        return
                     }
                     Task groovydocJar = project.tasks.create('groovydocJar', Jar)
                     groovydocJar.with {
@@ -250,7 +250,6 @@ class DefaultsPlugin implements Plugin<Project> {
                 project.plugins.apply('maven-publish')
 
                 project.afterEvaluate {
-
                     project.publishing {
                         publications {
                             main(MavenPublication) {
