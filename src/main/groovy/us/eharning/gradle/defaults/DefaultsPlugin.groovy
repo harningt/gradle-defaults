@@ -73,6 +73,7 @@ class DefaultsPlugin implements Plugin<Project> {
             project.allprojects { prj ->
                 prj.plugins.withId('java') { addOutput(prj.javadoc) }
                 prj.plugins.withId('groovy') { addOutput(prj.groovydoc) }
+                /* Unknown if kotlin needs its own separate 'doc' output */
             }
 
             project.gitPublish {
@@ -200,6 +201,8 @@ class DefaultsPlugin implements Plugin<Project> {
         }
 
         private void addJavaConfig() {
+            /* Unknown if kotlin needs its own separate setup like this
+             * ... currently system piggybacks off of java being included also */
             project.plugins.withId('java') {
                 project.plugins.apply('jacoco')
                 project.jacoco {
