@@ -32,7 +32,7 @@ class DefaultsPlugin implements Plugin<Project> {
         }
 
         DefaultsExtension extension = project.extensions.create('defaults', DefaultsExtension, project)
-        def globalOps = new GlobalOperations(project)
+        def globalOps = new GlobalOperations(project, extension)
         globalOps.addGit()
         globalOps.addReleaseConfig()
         globalOps.addVersioneye()
