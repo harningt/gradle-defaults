@@ -16,7 +16,6 @@
  */
 package us.eharning.gradle.defaults
 
-import nl.javadude.gradle.plugins.license.License
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -166,9 +165,10 @@ class DefaultsPlugin implements Plugin<Project> {
                     mapping 'java', 'SLASHSTAR_STYLE'
                     mapping 'kt', 'SLASHSTAR_STYLE'
                     ext.year = Calendar.getInstance().get(Calendar.YEAR)
-                }
-                project.tasks.withType(License) {
-                    exclude '**/*.properties'
+                    /* Only include those which licensing is setup
+                     * excludes for known data files seems not to work
+                     * */
+                    includes(['**/*.java', '**/*.groovy', '**/*.kt'])
                 }
             }
         }
