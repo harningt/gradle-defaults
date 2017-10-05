@@ -77,25 +77,19 @@ class DefaultsPlugin implements Plugin<Project> {
 
             project.gitPublish {
                 branch = 'gh-pages'
-                contents {
-                    from 'src/gh-pages'
-                }
             }
         }
 
         void addReleaseConfig() {
-            project.plugins.apply('org.ajoberstar.semver-vcs-grgit')
-            project.plugins.apply('org.ajoberstar.release-opinion')
+            project.plugins.apply('org.ajoberstar.reckon')
 
-            def tagTask = project.tasks.create('tagVersion') {
-                doLast {
-                    def version = project.version.toString()
-                    project.grgit.tag.add(name: version, message: "v${version}")
-                }
+            project.reckon {
+                normal = scopeFromProp()
+                preRelease = stageFromProp('milestone', 'rc', 'final')
             }
 
-            def releaseTask = project.tasks.release
-            releaseTask.dependsOn tagTask
+            def releaseTask = project.tasks.create('release')
+            releaseTask.dependsOn 'reckonTagPush'
             releaseTask.dependsOn 'gitPublishPush'
             project.allprojects { prj ->
                 prj.plugins.withId('org.gradle.base') {
