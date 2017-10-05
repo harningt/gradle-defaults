@@ -17,6 +17,7 @@ hs_err_pid*
 
 # gradle cache
 .gradle
+.gradletasknamecache
 
 # IDE
 .idea
@@ -26,3 +27,4 @@ hs_err_pid*
 
 # Build output
 build
+out
