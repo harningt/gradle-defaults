@@ -83,8 +83,8 @@ class DefaultsPlugin implements Plugin<Project> {
             project.plugins.apply('org.ajoberstar.reckon')
 
             project.reckon {
-                normal = scopeFromProp()
-                preRelease = stageFromProp('milestone', 'rc', 'final')
+                scopeFromProp()
+                snapshotFromProp()
             }
 
             def releaseTask = project.tasks.create('release')
