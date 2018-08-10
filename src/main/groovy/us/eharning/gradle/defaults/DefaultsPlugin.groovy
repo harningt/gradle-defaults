@@ -261,7 +261,6 @@ class DefaultsPlugin implements Plugin<Project> {
 
         private void addPluginConfig() {
             project.plugins.withId('java-gradle-plugin') {
-                project.plugins.apply('org.ajoberstar.stutter')
                 project.plugins.apply('com.gradle.plugin-publish')
 
                 // remove duplicate publication
