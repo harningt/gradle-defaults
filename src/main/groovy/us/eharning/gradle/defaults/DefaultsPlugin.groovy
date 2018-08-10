@@ -34,7 +34,6 @@ class DefaultsPlugin implements Plugin<Project> {
         def globalOps = new GlobalOperations(project, extension)
         globalOps.addGit()
         globalOps.addReleaseConfig()
-        globalOps.addVersioneye()
 
         project.allprojects { prj ->
             def localOps = new LocalOperations(prj, extension)
@@ -84,8 +83,8 @@ class DefaultsPlugin implements Plugin<Project> {
             project.plugins.apply('org.ajoberstar.reckon')
 
             project.reckon {
-                normal = scopeFromProp()
-                preRelease = stageFromProp('milestone', 'rc', 'final')
+                scopeFromProp()
+                snapshotFromProp()
             }
 
             def releaseTask = project.tasks.create('release')
@@ -100,18 +99,6 @@ class DefaultsPlugin implements Plugin<Project> {
                 }
                 prj.plugins.withId('com.gradle.plugin-publish') {
                     releaseTask.dependsOn prj.publishPlugins
-                }
-            }
-        }
-
-        void addVersioneye() {
-            project.plugins.apply('org.standardout.versioneye')
-
-            project.afterEvaluate {
-                project.versioneye {
-                    includePlugins = false
-                    /* Workaround for Gradle 4 issue */
-                    exclude project.configurations.findAll { !it.canBeResolved }*.name as String[]
                 }
             }
         }
@@ -274,7 +261,6 @@ class DefaultsPlugin implements Plugin<Project> {
 
         private void addPluginConfig() {
             project.plugins.withId('java-gradle-plugin') {
-                project.plugins.apply('org.ajoberstar.stutter')
                 project.plugins.apply('com.gradle.plugin-publish')
 
                 // remove duplicate publication

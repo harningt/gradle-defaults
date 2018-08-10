@@ -29,7 +29,7 @@ The repository is managed using the Gitflow workflow. Note that any published
 feature/* branches are subject to history modification, so beware working
 off of those.
 
-Non-annotated tags will be added in the form vMAJOR.MINOR.MICRO-dev to denote the
+Non-annotated tags will be added in the form vMAJOR.MINOR.MICRO-DEV to denote the
 start of a new feature. This will guide the next release to be versioned as
 vMAJOR.MINOR.MICRO. Without this, the next expected version would be a MICRO-change.
 
