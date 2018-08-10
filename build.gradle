@@ -63,5 +63,5 @@ pluginBundle {
 }
 
 wrapper {
-    gradleVersion = '4.0'
+    gradleVersion = '4.9'
 }
