@@ -36,7 +36,6 @@ dependencies {
     compile 'org.ajoberstar:gradle-bintray:0.1.1-rc.1'
     //compile 'com.gradle.publish:plugin-publish-plugin:0.9.7'
     compile "com.diffplug.spotless:spotless-plugin-gradle:3.5.2"
-    compile "org.standardout:gradle-versioneye-plugin:1.5.0"
     compile "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0"
 }
 
