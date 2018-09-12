@@ -196,7 +196,7 @@ class DefaultsPlugin implements Plugin<Project> {
             project.plugins.withId('java') {
                 project.plugins.apply('jacoco')
                 project.jacoco {
-                    toolVersion = '0.7.9'
+                    toolVersion = '0.8.2'
                 }
                 project.jacocoTestReport {
                     reports {
