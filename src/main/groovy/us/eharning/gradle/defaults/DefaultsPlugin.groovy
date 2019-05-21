@@ -1,6 +1,6 @@
 /*
  * Copyright 2014-2016 Andrew Oberstar
- * Copyright 2017 Thomas Harning Jr. <harningt@gmail.com>
+ * Copyright 2017, 2019 Thomas Harning Jr. <harningt@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ class DefaultsPlugin implements Plugin<Project> {
 
         DefaultsExtension extension = project.extensions.create('defaults', DefaultsExtension, project)
         def globalOps = new GlobalOperations(project, extension)
-        globalOps.addGit()
         globalOps.addReleaseConfig()
 
         project.allprojects { prj ->
@@ -58,27 +57,6 @@ class DefaultsPlugin implements Plugin<Project> {
             this.extension = extension
         }
 
-        void addGit() {
-            project.plugins.apply('org.ajoberstar.grgit')
-            project.plugins.apply('org.ajoberstar.git-publish')
-
-            def addOutput = { task ->
-                project.gitPublish.contents.from(task.outputs.files) {
-                    into "docs${task.path}".replace(':', '/')
-                }
-            }
-
-            project.allprojects { prj ->
-                prj.plugins.withId('java') { addOutput(prj.javadoc) }
-                prj.plugins.withId('groovy') { addOutput(prj.groovydoc) }
-                /* Unknown if kotlin needs its own separate 'doc' output */
-            }
-
-            project.gitPublish {
-                branch = 'gh-pages'
-            }
-        }
-
         void addReleaseConfig() {
             project.plugins.apply('org.ajoberstar.reckon')
 
@@ -89,7 +67,6 @@ class DefaultsPlugin implements Plugin<Project> {
 
             def releaseTask = project.tasks.create('release')
             releaseTask.dependsOn 'reckonTagPush'
-            releaseTask.dependsOn 'gitPublishPush'
             project.allprojects { prj ->
                 prj.plugins.withId('org.gradle.base') {
                     releaseTask.dependsOn prj.clean, prj.build
@@ -125,10 +102,11 @@ class DefaultsPlugin implements Plugin<Project> {
 
         private void addFindbugs() {
             project.plugins.withId('java') {
-                project.plugins.apply('findbugs')
-                project.findbugs {
+                project.plugins.apply('com.github.spotbugs')
+                project.spotbugs {
+                    toolVersion = '4.0.0-beta1'
                     sourceSets = [sourceSets.main]
-                    excludeFilter project.rootProject.file('gradle/findbugs-exclude.xml')
+                    excludeFilter project.rootProject.file('gradle/spotbugs-exclude.xml')
                 }
             }
         }
