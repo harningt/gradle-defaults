@@ -12,7 +12,7 @@ buildscript {
 plugins {
   id 'groovy'
   id 'java-gradle-plugin'
-  id 'us.eharning.gradle.defaults' version '1.0.0'
+  id 'us.eharning.gradle.defaults' version '2.1.0'
 }
 
 apply plugin: "com.gradle.plugin-publish"
