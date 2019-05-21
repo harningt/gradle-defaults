@@ -125,10 +125,11 @@ class DefaultsPlugin implements Plugin<Project> {
 
         private void addFindbugs() {
             project.plugins.withId('java') {
-                project.plugins.apply('findbugs')
-                project.findbugs {
+                project.plugins.apply('com.github.spotbugs')
+                project.spotbugs {
+                    toolVersion = '4.0.0-beta1'
                     sourceSets = [sourceSets.main]
-                    excludeFilter project.rootProject.file('gradle/findbugs-exclude.xml')
+                    excludeFilter project.rootProject.file('gradle/spotbugs-exclude.xml')
                 }
             }
         }
