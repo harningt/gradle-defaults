@@ -33,7 +33,7 @@ dependencies {
     compile ('org.ajoberstar.reckon:reckon-gradle:0.10.0')
 
     //compile 'com.gradle.publish:plugin-publish-plugin:0.9.7'
-    compile "com.diffplug.spotless:spotless-plugin-gradle:3.13.0"
+    compile "com.diffplug.spotless:spotless-plugin-gradle:3.23.0"
     compile "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0"
 }
 
